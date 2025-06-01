@@ -23,7 +23,7 @@ export function EmojiTown() {
 
   const handlePhaseSwitch = (phase: PhaseType) => {
     setCurrentPhase(phase);
-    switchPhase(phase);
+    switchPhase.mutate({ phase });
   };
 
   const CurrentPhaseComponent = PHASES.find(p => p.id === currentPhase)?.component || StarterPackPhase;
