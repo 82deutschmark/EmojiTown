@@ -174,23 +174,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const collection = await storage.getEmojiCollection(gameState.id);
       
-      // Check if we can debit the components (more flexible validation)
-      const componentCounts = new Map<string, number>();
+      // Count how many times each component is used
+      const baseUsage = new Map<string, number>();
+      const skinUsage = new Map<string, number>();
       
-      // Count required components
       for (const component of usedComponents) {
-        const key = `${component.baseEmoji}-${component.skinTone}`;
-        componentCounts.set(key, (componentCounts.get(key) || 0) + 1);
+        baseUsage.set(component.baseEmoji, (baseUsage.get(component.baseEmoji) || 0) + 1);
+        skinUsage.set(component.skinTone, (skinUsage.get(component.skinTone) || 0) + 1);
       }
       
-      // Check availability
-      for (const [key, requiredCount] of componentCounts) {
-        const [baseEmoji, skinTone] = key.split('-');
-        const baseAvailable = collection.find(item => item.emoji === baseEmoji && item.category === 'people')?.count || 0;
-        const skinAvailable = collection.find(item => item.emoji === skinTone && item.category === 'skinTones')?.count || 0;
-        
-        if (baseAvailable < requiredCount || skinAvailable < requiredCount) {
-          return res.status(400).json({ error: "Insufficient components for acceptance. Please generate new citizens." });
+      // Validate we have enough of each component
+      for (const [emoji, count] of Array.from(baseUsage.entries())) {
+        const item = collection.find(item => item.emoji === emoji && item.category === 'people');
+        if (!item || item.count < count) {
+          return res.status(400).json({ error: "Insufficient base people components. Please generate new citizens." });
+        }
+      }
+      
+      for (const [emoji, count] of Array.from(skinUsage.entries())) {
+        const item = collection.find(item => item.emoji === emoji && item.category === 'skinTones');
+        if (!item || item.count < count) {
+          return res.status(400).json({ error: "Insufficient skin tone components. Please generate new citizens." });
         }
       }
 
