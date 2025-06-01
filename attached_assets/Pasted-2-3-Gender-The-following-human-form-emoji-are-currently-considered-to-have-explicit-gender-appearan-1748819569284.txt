@@ -1,0 +1,267 @@
+2.3 Gender
+The following human-form emoji are currently considered to have explicit gender appearance based on the name and/or practice. They intentionally contrast with other characters. This list may change in the future if new explicit-gender characters are added, or if some of these are changed to be gender-neutral. The names below are the CLDR short names, followed by the formal Unicode name in capital letters if it differs.
+
+Emoji With Explicit Gender Appearance
+
+Female	Male
+U+1F467	girl	U+1F466	boy
+U+1F469	woman	U+1F468	man
+U+1F475	old woman
+OLDER WOMAN	U+1F474	old man
+OLDER MAN
+U+1F46D	women holding hands
+TWO WOMEN HOLDING HANDS	U+1F46C	men holding hands
+TWO MEN HOLDING HANDS
+U+1F936	Mrs. Claus
+MOTHER CHRISTMAS	U+1F385	Santa Claus
+FATHER CHRISTMAS
+U+1F478	princess	U+1F934	prince
+U+1F483	woman dancing
+DANCER	U+1F57A	man dancing
+U+1F930	pregnant woman	U+1FAC3	pregnant man
+U+1F931	breast-feeding		
+U+1F9D5	woman with headscarf
+PERSON WITH HEADSCARF		
+Explicit Gender Combination
+U+1F46B	woman and man holding hands
+MAN AND WOMAN HOLDING HANDS
+The emoji in the table Emoji Changed to Gender-Neutral in Emoji 13.0+ below have been removed from the table Emoji With Explicit Gender Appearance, and the CLDR names for most have been changed to use person (along with some other changes). The person with veil and person in tuxedo emoji also have RGI man and woman gender variants. The others do not; for person in suit levitating and person with skullcap, the visual distinctions would be unclear at emoji sizes.
+
+Emoji Changed to Gender-Neutral in Emoji 13.0+
+
+Gender-Neutral
+E13.0	U+1F470	person with veil
+BRIDE WITH VEIL
+U+1F935	person in tuxedo
+MAN IN TUXEDO
+U+1F574	person in suit levitating
+MAN IN BUSINESS SUIT LEVITATING
+U+1F472	person with skullcap
+MAN WITH GUA PI MAO
+E13.1	U+1F9D4	person: beard
+BEARDED PERSON
+ 
+
+2.3.1 Gender-Neutral Emoji
+It is often the case that gender is unknown or irrelevant, as in the usage “Is there a doctor on the plane?,” or a gendered appearance may not be desired. Such cases are known as “gender-neutral,” “gender-inclusive,” “unspecified-gender,” or many other terms. Except for the emoji shown in the table Emoji With Explicit Gender Appearance, human-form emoji should normally be depicted in a gender-neutral way unless gender appearance is explicitly specified using an emoji ZWJ sequence in one of the ways shown in the following table.
+
+Gender Appearance Mechanisms
+
+Type	Description	Examples
+Sign Format	A human-form emoji can be given explicit gender using a ZWJ sequence. The sequence contains the base emoji followed by ZWJ and either FEMALE SIGN or MALE SIGN. The human-form emoji alone should be gender-neutral in form.	man runner = RUNNER + ZWJ + MALE SIGN
+woman runner = RUNNER + ZWJ + FEMALE SIGN
+runner = RUNNER
+Object Format	A profession or role emoji can be formed using a ZWJ sequence. The sequence starts with MAN or WOMAN followed by ZWJ and ending with an object. The ADULT character can be used for a gender-neutral version.	man astronaut = MAN + ZWJ + ROCKET SHIP
+woman astronaut = WOMAN + ZWJ + ROCKET SHIP
+astronaut = ADULT + ZWJ + ROCKET SHIP
+Although the human-form emoji used in sign format type ZWJ sequences are supposed to have gender-neutral appearance by themselves (when not used in a sign format type ZWJ sequence), many vendors previously depicted these human-form emoji as a man or woman. As a result, they had the same appearance as one of the sign format type ZWJ sequences. For example, most vendors depicted detective as man detective and person getting haircut as woman getting haircut, but some vendors depicted police officer as man police officer while others depicted it as woman police officer.
+
+Gender-neutral versions of the profession or role emoji using object format type ZWJ sequences are promulgated by adding them to the RGI emoji ZWJ sequence set.
+
+2.3.2 Marking Gender in Emoji Input
+Emoji input systems such as keyboards or palettes typically provide for input of some emoji whose appearance is explicitly gendered—for example, emoji that appear specifically as a woman or man. When such emoji are not included in the table Emoji With Explicit Gender Appearance, the input system should generate a sequence for them that explicitly indicates the gendered appearance, rather than relying on a particular system’s default appearance. This principle is shown with the following example:
+
+Assume on some system that the default appearance of detective is as man detective. On that system, when entering man detective, an input system should still use the explicit sequence
+
+U+1F575 U+FE0F U+200D U+2642 U+FE0F (man detective)
+
+rather than just
+
+U+1F575 U+FE0F (detective)
+
+2.4 Diversity
+Five symbol modifier characters that provide for a range of skin tones for human emoji were released in Unicode Version 8.0. These characters are based on the six tones of the Fitzpatrick scaleexternal link, a recognized standard for dermatology. The exact shades may vary between implementations.
+
+Emoji Modifiers
+
+Code	CLDR Short Name	Unicode Character Name	Samples
+U+1F3FB	light skin tone	EMOJI MODIFIER FITZPATRICK TYPE-1-2		
+U+1F3FC	medium-light skin tone	EMOJI MODIFIER FITZPATRICK TYPE-3		
+U+1F3FD	medium skin tone	EMOJI MODIFIER FITZPATRICK TYPE-4		
+U+1F3FE	medium-dark skin tone	EMOJI MODIFIER FITZPATRICK TYPE-5		
+U+1F3FF	dark skin tone	EMOJI MODIFIER FITZPATRICK TYPE-6		
+These characters have been designed so that even where diverse color images for human emoji are not available, readers can see the intended meaning.
+
+When used alone, the default representation of these modifier characters is a color swatch. Whenever one of these characters immediately follows certain characters (such as WOMAN), then a font should show the sequence as a single glyph corresponding to the image for the person(s) or body part with the specified skin tone, such as the following:
+
+ +  → 
+
+However, even if the font doesn’t show the combined character, the user can still see that a skin tone was intended:
+
+
+
+When a human emoji is not immediately followed by an emoji modifier character, it should use a generic, non-realistic skin tone, such as  RGB #FFCC22 (one of the colors typically used for the smiley faces).
+
+No particular hair color is required, however, dark hair is generally regarded as more neutral because black or dark brown hair is widespread among people of every skin tone. This does not apply to emoji that already have an explicit hair color such as PERSON WITH BLOND HAIR (originally added for compatibility with Japanese mobile phone emoji), which needs to have blond hair regardless of skin tone.
+
+To have an effect on an emoji, an emoji modifier must immediately follow that base emoji character. Emoji presentation selectors are neither needed nor recommended for emoji characters when they are followed by emoji modifiers, and should not be used in newly generated emoji modifier sequences; the emoji modifier automatically implies the emoji presentation style. See ED-13. emoji modifier sequence. However, some older data may include defective emoji modifier sequences in which an emoji presentation selector does occur between the base emoji character and the emoji modifier; this is the only exception to the rule that an emoji modifier must immediately follow the character that it modifies. In this case the emoji presentation selector should be ignored. For handling text presentation selectors in sequences, see Section 4, Presentation Style.
+
+<U+270C VICTORY HAND, FE0F, TYPE-3>
+
+Any other intervening character causes the emoji modifier to appear as a free-standing character. Thus
+
+ +  +  → 
+
+2.4.1 Implementations
+Implementations can present the emoji modifiers as separate characters in an input palette, or present the combined characters using mechanisms such as long press.
+
+The emoji modifiers are not intended for combination with arbitrary emoji characters. Instead, they are restricted to the emoji modifier base characters: no other characters are to be combined with emoji modifiers. This set may change over time, with successive versions of this document. To find the exact list of emoji modifier bases for each version, use the Emoji_Modifier_Base character property, as described in Annex A: Emoji Properties and Data Files.
+
+Sample Emoji Modifier Bases
+
+👦 👧 👨 👩 👴 👵 👶 👱 👮 👲 👳 👷 👸 💂 🕵 🎅 👼 💆 💇 👰 🙍 🙎 🙅 🙆 💁 🙋 🙇 🙌 🙏 🚶 🏃 💃 💪 👈 👉 ☝ 👆 🖕 👇 ✌ 🖖 🤘 🖐 ✊ ✋ 👊 👌 👍 👎 👋 👏 👐 ✍ 💅 👂 👃 🚣 🛀 🏄 🏊 ⛹ 🏋 🚴 🚵
+The following chart shows the expected display with emoji modifiers, depending on the preceding character and the level of support for the emoji modifier. The “Unsupported” rows show how the character would typically appear on a system that does not have a font with that character in it: with a missing glyph indicator. In some circumstances, display of an emoji modifier following an Emoji_Modifier_Base character should be suppressed:
+
+If an emoji modifier base has no skin visible on a particular system, then any following emoji modifier should be suppressed.
+
+In other circumstances, display of an emoji modifier following an Emoji_Modifier_Base character may be suppressed:
+
+If a particular emoji modifier base uses a non-realistic skin tone that differs from the default skin tone used for other Emoji_Modifier_Base characters, then any following emoji modifier may be suppressed. For example, suppose vampire is shown with gray skin in a particular implementation while other Emoji_Modifier_Base characters are shown with neon yellow skin in the absence of emoji modifiers; any emoji modifier following vampire may be suppressed.
+
+Expected Emoji Modifiers Display
+
+Support Level	Emoji Modifier Base	Sequence	Display
+Fully supported	Yes	 + 	 
+Yes	🧛 + 	🧛 
+Yes, but no skin visible	🏂 + 	🏂 
+Yes, but unusual default skin tone	🧛 + 	🧛  
+No	⛽ + 	⛽ 
+Fallback	Yes	 + 	 
+No	⛽ + 	⛽ 
+Unsupported	Yes	 + 	 
+No	⛽ + 	⛽ 
+As noted above at the end of Section 2.4, Diversity, emoji presentation selectors are neither needed nor recommended for use in emoji modifier sequences. See ED-13. emoji modifier sequence. However, older data may include defective emoji modifier sequences which do include emoji presentation selectors.
+
+2.4.2 Emoji Modifiers in Text
+For input, the composition of an emoji sequence does not need to be apparent to the user: it appears on the screen as a single image. On a phone, for example, a long press on a human figure can bring up a minipalette of different skin tones, without the user having to separately find the human figure and then the modifier. The following shows some possible appearances:
+
+Minipalettes
+
+   	
+or
+
+
+ 	
+
+Of course, there are many other types of diversity in human appearance besides different skin tones: Different hair styles and color, use of eyeglasses, various kinds of facial hair, different body shapes, different headwear, and so on. It is beyond the scope of Unicode to provide an encoding-based mechanism for representing every aspect of human appearance diversity that emoji users might want to indicate. The best approach for communicating very specific human images—or any type of image in which preservation of specific appearance is very important—is the use of embedded graphics, as described in Longer Term Solutions.
+
+2.5 Emoji ZWJ Sequences
+The U+200D ZERO WIDTH JOINER (ZWJ) can be used between the elements of a sequence of characters to indicate that a single glyph should be presented if available. An implementation uses this mechanism to handle such an emoji ZWJ sequence as a single glyph, with a palette or keyboard that generates the appropriate sequences for the glyphs shown. To the user of such a system, these behave like single emoji characters, even though internally they are sequences.
+
+When an emoji ZWJ sequence is sent to a system that does not have a corresponding single glyph, the ZWJ characters are ignored and a fallback sequence of separate emoji is displayed. Thus an emoji ZWJ sequence should only be defined and supported by implementations where the fallback sequence would also make sense to a recipient.
+
+For example, the following are possible displays:
+
+ZWJ Sequence Display
+
+Sequence	Display	Combined glyph?
+👩❤️‍❤️‍❤️‍👩	
+👩‍❤️‍👩
+Yes
+👩❤️‍👩
+No
+See also the Emoji ZWJ Sequences [emoji-charts].
+
+The use of ZWJ sequences may be difficult in some implementations, so caution should be taken before adding new sequences.
+
+For recommendations on the use of variation selectors in ZWJ sequences, see Section 2.7, Emoji Implementation Notes below.
+
+2.6 Multi-Person Groupings
+There are several emoji that depict more than one person interacting. When implemented with a choice of genders or skin tones, special handling is required on a case-by-case basis. These emoji are listed below:
+
+Multi-Person Groupings
+
+Hex	Char	CLDR Name
+U+1F91D	🤝	handshake
+U+1F46F	👯️‍	people with bunny ears
+U+1F93C	🤼️‍	people wrestling
+U+1F46B	👫	woman and man holding hands
+U+1F46C	👬	men holding hands
+U+1F46D	👫	women holding hands
+U+1F48F	💏	kiss
+U+1F491	💑	couple with heart
+
+U+1F46A family is a similar case that also requires special consideration: see section 2.6.1 for further discussion.
+
+There are some other emoji that would share the same gender and skin tone, such as folded hands. As far as gender and skin tone are concerned, these behave just like a single person and so need no special treatment. Other examples include:
+
+For U+1F486 person getting massage, the hands of the person providing the massage should be depicted with no skin tone showing, perhaps in gloves.
+For the following emoji and their skin-tone variants, the infant should be depicted with no skin tone showing, perhaps covered in a blanket, so that the emoji is treated as a single person for purposes of skin tone modification:
+U+1F931 breast-feeding
+U+1F469 U+200D U+1F37C woman feeding baby
+U+1F468 U+200D U+1F37C man feeding baby
+U+1F9D1 U+200D U+1F37C person feeding baby
+2.6.1 Multi-Person Gender
+The emoji for multi-person groupings have unspecified gender (unless modified) with the exception of the three characters for people holding hands. The handshake itself does not provide for gender differences.
+
+Family sequences can depict combinations of one or two adults along with one or two children. RGI sequences allow specifying gender of family members but vendors are encouraged to use maximally-generic depictions of families, such as silhouettes; visible gender distinctions are not required. In addition, gendered family sequences need not be available for input and any such sequence may be treated the same as the corresponding non-gendered sequence.
+
+Non-Gendered Family Sequences
+
+Description	Sample
+Display	Internal Representation
+family:
+adult, child	🧑‍🧒	🧑 ZWJ️‍ 🧒
+family:
+adult, child, child	🧑‍🧒‍🧒	🧑 ZWJ️‍ 🧒 ZWJ️‍ 🧒
+family:
+adult, adult, child	🧑‍🧑‍🧒	🧑 ZWJ️‍ 🧑 ZWJ️‍ 🧒
+family:
+adult, adult, child, child	🧑‍🧑‍🧒‍🧒	🧑 ZWJ️‍ 🧑 ZWJ️‍ 🧒 ZWJ️‍ 🧒
+
+Gender is applied to KISS and COUPLE WITH HEART by using ZWJ sequences with MAN, WOMAN, ADULT, BOY, GIRL, and CHILD. The data files list the RGI versions of these, such as the following:
+
+U+1F469 U+200D U+2764 U+FE0F U+200D U+1F48B U+200D U+1F468	kiss: woman, man
+
+Gender is applied to people with bunny ears and people wrestling by using ZWJ sequences, as follows.
+
+Gender with Multi-Person Groupings
+
+Description	Internal Representation
+people with bunny ears	👯️‍
+men with bunny ears	👯️‍ ZWJ️‍ ♂️‍
+women with bunny ears	👯️‍ ZWJ️‍ ♀
+people wrestling	🤼️‍
+men wrestling	🤼️‍ ZWJ️‍ ♂️‍
+women wrestling	🤼️‍ ZWJ ♀
+
+2.6.2 Multi-Person Skin Tones
+As with gender, skin tones can be applied to multi-person groupings in a similar manner. Emoji represented internally by sequences may have skin tone modifiers (Emoji_Modifier characters) added after each of the characters that take them (those with Emoji_Modifier_Base). This is illustrated by the table Examples of Skin Tones for Multi-Person Groupings Using RGI Sequences below.
+
+Multi-person sequences that mix people characters without skin tones and people characters with skin tones should not be generated. That is, for an input system, if one person character in a multi-person emoji sequence has a skin tone modifier, then all people characters in that sequence should have skin tone modifiers.
+
+In Emoji 12.0, the Emoji_Modifier_Base property, emoji modifier sequences and RGI ZWJ sequences were updated to add 25 skin tone combinations for woman and man holding hands, and 15 combinations each for women holding hands, men holding hands, and people holding hands. These sequences appear as 70 different images.
+
+In Emoji 12.1, the RGI ZWJ sequences for women holding hands, men holding hands, and people holding hands were further updated to add 10 more sequences each, so their sequences correspond to those for woman and man holding hands. The new sequences are for people of different skin tones, but with the darker skin tone later in the sequence instead of earlier. For example:
+
+Emoji 12.0 sequence: 1F468 1F3FD 200D 1F91D 200D 1F468 1F3FB ; men holding hands: medium skin tone, light skin tone
+
+Emoji 12.1 addition: 1F468 1F3FB 200D 1F91D 200D 1F468 1F3FD ; men holding hands: light skin tone, medium skin tone
+
+The only difference between the above sequences is that the inferred positions of the medium-skin-tone man and the light-skin-tone man are swapped, left and right.
+
+Implementations can use the same image for both sequences. For the multi-person emoji, implementations are not required to have different images for people of the same gender depending solely on position. The choice of whether to do so may depend on design considerations specific to particular vendor images.
+
+Other multi-person groups with different skin tone combinations can be represented as valid sequences, but not all such sequences are RGI. The following table provides examples of RGI sequences for multi-person groupings with skin-tone modifications.
+
+Examples of Skin Tones for Multi-Person Groupings Using RGI Sequences
+
+Description	Internal Representation
+women holding hands:
+medium, dark skin tones	👩 🏽 ZWJ️‍ 🤝 ZWJ️‍ 👩 🏿
+people holding hands:
+medium, dark skin tones	🧑 🏽 ZWJ️‍ 🤝 ZWJ️‍ 🧑 🏿
+handshake:
+medium, dark skin tones	🫱 🏽 ZWJ️‍ 🫲 🏿
+
+Skin tone modifiers can be applied to each of the eight characters listed in the table Multi-Person Groupings; examples for some of these characters are illustrated in the following table. This gives all of the people in the group the same skin tone, which is similar to how the gender marker works. However, in Emoji 16.0 such emoji modifier sequences only have RGI status for six of those characters: kiss, couple with heart, woman and man holding hands, men holding hands, women holding hands, and handshake.
+
+Examples of Skin Tones for Multi-Person Groupings Using Single Characters
+
+Description	Internal Representation
+kiss:
+medium skin tone	💏 🏽
+handshake:
+medium skin tone	🤝 🏽
+woman and man holding hands:
+medium skin tone	👫 🏽

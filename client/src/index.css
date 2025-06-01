@@ -1,0 +1,345 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 20 14.3% 4.1%;
+  --muted: 60 4.8% 95.9%;
+  --muted-foreground: 25 5.3% 44.7%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 20 14.3% 4.1%;
+  --card: 0 0% 100%;
+  --card-foreground: 20 14.3% 4.1%;
+  --border: 20 5.9% 90%;
+  --input: 20 5.9% 90%;
+  --primary: 227 90% 66%; /* #667eea */
+  --primary-foreground: 210 40% 98%;
+  --secondary: 60 4.8% 95.9%;
+  --secondary-foreground: 24 9.8% 10%;
+  --accent: 60 4.8% 95.9%;
+  --accent-foreground: 24 9.8% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 60 9.1% 97.8%;
+  --ring: 20 14.3% 4.1%;
+  --radius: 0.5rem;
+  
+  /* Emoji Town Custom Colors */
+  --gradient-from: 227 90% 66%; /* #667eea */
+  --gradient-to: 288 38% 56%; /* #764ba2 */
+  --success: 142 76% 36%; /* #10b981 */
+  --warning: 45 93% 47%; /* #f59e0b */
+  --error: 0 84% 60%; /* #ef4444 */
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --primary: 227 90% 66%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 240 4.9% 83.9%;
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* Emoji Town Specific Styles */
+.gradient-bg {
+  background: linear-gradient(135deg, hsl(var(--gradient-from)) 0%, hsl(var(--gradient-to)) 100%);
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+/* Pack Animation Effects */
+.pack-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.pack-shine::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.pack-shine:hover::before {
+  left: 100%;
+}
+
+/* Emoji Slot Animations */
+.emoji-slot {
+  transition: all 0.2s ease;
+}
+
+.emoji-slot:hover {
+  transform: scale(1.1);
+  z-index: 1;
+}
+
+.emoji-slot.revealed {
+  animation: flipIn 0.6s ease forwards;
+}
+
+@keyframes flipIn {
+  0% {
+    transform: rotateY(180deg);
+    opacity: 0;
+  }
+  100% {
+    transform: rotateY(0deg);
+    opacity: 1;
+  }
+}
+
+/* Pulse Animation for Status Indicators */
+.animate-pulse-slow {
+  animation: pulse 2s infinite;
+}
+
+/* Bounce Animation for Interactive Elements */
+.animate-bounce-gentle {
+  animation: bounceGentle 1s ease-in-out infinite;
+}
+
+@keyframes bounceGentle {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Building Slot Hover Effects */
+.building-slot {
+  transition: all 0.3s ease;
+}
+
+.building-slot:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Family Card Hover Effects */
+.family-card {
+  transition: all 0.3s ease;
+}
+
+.family-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Draggable Element Styles */
+.family-placement-card {
+  cursor: grab;
+  transition: all 0.3s ease;
+}
+
+.family-placement-card:active {
+  cursor: grabbing;
+  transform: scale(0.95);
+}
+
+/* ZWJ Combination Result Animation */
+.zwj-result {
+  animation: zwjPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes zwjPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+/* Phase Tab Active State */
+.phase-tab.active {
+  background: linear-gradient(45deg, hsl(var(--gradient-from)), hsl(var(--gradient-to)));
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Success State Colors */
+.bg-success {
+  background-color: hsl(var(--success));
+}
+
+.text-success {
+  color: hsl(var(--success));
+}
+
+.border-success {
+  border-color: hsl(var(--success));
+}
+
+/* Warning State Colors */
+.bg-warning {
+  background-color: hsl(var(--warning));
+}
+
+.text-warning {
+  color: hsl(var(--warning));
+}
+
+/* Error State Colors */
+.bg-error {
+  background-color: hsl(var(--error));
+}
+
+.text-error {
+  color: hsl(var(--error));
+}
+
+/* Custom Gradient Backgrounds */
+.bg-gradient-primary {
+  background: linear-gradient(45deg, hsl(var(--gradient-from)), hsl(var(--gradient-to)));
+}
+
+.bg-gradient-success {
+  background: linear-gradient(45deg, hsl(var(--success)), hsl(142 76% 46%));
+}
+
+.bg-gradient-warning {
+  background: linear-gradient(45deg, hsl(var(--warning)), hsl(45 93% 57%));
+}
+
+.bg-gradient-error {
+  background: linear-gradient(45deg, hsl(var(--error)), hsl(0 84% 70%));
+}
+
+/* Tooltip Styles */
+.tooltip {
+  position: absolute;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.tooltip.show {
+  opacity: 1;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Design Adjustments */
+@media (max-width: 768px) {
+  .pack-shine {
+    width: 150px;
+    height: 200px;
+  }
+  
+  .emoji-slot {
+    font-size: 1.2rem;
+  }
+  
+  .building-slot {
+    font-size: 1.5rem;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .glass-effect {
+    background: rgba(255, 255, 255, 1);
+    backdrop-filter: none;
+  }
+  
+  .building-slot {
+    border-width: 2px;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .pack-shine::before,
+  .emoji-slot,
+  .building-slot,
+  .family-card {
+    transition: none;
+  }
+  
+  .animate-pulse-slow,
+  .animate-bounce-gentle,
+  .zwj-result {
+    animation: none;
+  }
+}
+
+/* Focus Visible Styles for Accessibility */
+.focus\:ring-primary:focus-visible {
+  outline: 2px solid hsl(var(--gradient-from));
+  outline-offset: 2px;
+}
+
+/* Custom Scrollbar Styles */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--gradient-from));
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--gradient-to));
+}
