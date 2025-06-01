@@ -2,156 +2,75 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { z } from "zod";
 import { storage } from "./storage";
+import { insertGameStateSchema, insertCitizenSchema, insertFamilySchema, insertBuildingSchema, insertRelationshipSchema } from "@shared/schema";
 import { generateStarterPack } from "./lib/starter-pack-generator";
-import { createCitizen, createFamily, createCouple, addAdoptedChild } from "./lib/zwj-engine";
-import { 
-  insertGameStateSchema,
-  insertEmojiCollectionSchema,
-  insertCitizenSchema,
-  insertFamilySchema,
-  insertBuildingSchema,
-  insertRelationshipSchema
-} from "@shared/schema";
-
-// Request validation schemas
-const recruitCitizenSchema = z.object({
-  baseEmoji: z.string(),
-  skinTone: z.string()
-});
-
-const formFamilySchema = z.object({
-  adults: z.array(z.number()),
-  children: z.array(z.number()).optional()
-});
-
-const placeFamilySchema = z.object({
-  familyId: z.number(),
-  buildingType: z.string(),
-  position: z.number()
-});
-
-const formWorkplaceCoupleSchema = z.object({
-  citizen1Id: z.number(),
-  citizen2Id: z.number(),
-  buildingType: z.string()
-});
-
-const processAdoptionSchema = z.object({
-  familyId: z.number(),
-  childId: z.number()
-});
-
-const switchPhaseSchema = z.object({
-  phase: z.enum(['starter-pack', 'recruit-citizens', 'welcome-center', 'town-building', 'secondary-pairing'])
-});
+import { createCitizen, createCouple, createFamily, addAdoptedChild } from "./lib/zwj-engine";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Initialize default game state if none exists
-  const initializeDefaultGameState = async () => {
-    const existingGameState = await storage.getGameState();
-    if (!existingGameState) {
-      await storage.createGameState({
-        userId: null,
-        currentPhase: 'starter-pack',
-        packsOpened: 0,
-        totalCitizens: 0,
-        totalFamilies: 0,
-        buildingsPopulated: 0,
-        adoptions: 0
-      });
-    }
-  };
-
-  await initializeDefaultGameState();
-
-  // Get game state
-  app.get('/api/game-state', async (req, res) => {
+  
+  // ============ GAME STATE ROUTES ============
+  
+  // Get current game state
+  app.get("/api/game-state", async (req, res) => {
     try {
       const gameState = await storage.getGameState();
       if (!gameState) {
-        return res.status(404).json({ message: 'Game state not found' });
+        // Create initial game state
+        const newState = await storage.createGameState({
+          currentPhase: "starter-pack",
+          packsOpened: 0,
+          totalCitizens: 0,
+          totalFamilies: 0,
+          buildingsPopulated: 0,
+          adoptions: 0
+        });
+        return res.json(newState);
       }
       res.json(gameState);
     } catch (error) {
-      res.status(500).json({ message: 'Failed to fetch game state' });
+      res.status(500).json({ error: "Failed to get game state" });
     }
   });
 
-  // Get emoji collection
-  app.get('/api/emoji-collection', async (req, res) => {
+  // Advance to next phase
+  const phaseTransitionSchema = z.object({
+    phase: z.enum(["starter-pack", "recruit-citizens", "welcome-center", "town-building", "secondary-pairing"])
+  });
+
+  app.post("/api/phase-transition", async (req, res) => {
     try {
+      const { phase } = phaseTransitionSchema.parse(req.body);
       const gameState = await storage.getGameState();
       if (!gameState) {
-        return res.status(404).json({ message: 'Game state not found' });
+        return res.status(404).json({ error: "Game state not found" });
       }
-      
-      const collection = await storage.getEmojiCollection(gameState.id);
-      res.json(collection);
+
+      const updatedState = await storage.updateGameState(gameState.id, {
+        currentPhase: phase
+      });
+      res.json(updatedState);
     } catch (error) {
-      res.status(500).json({ message: 'Failed to fetch emoji collection' });
+      res.status(500).json({ error: "Failed to transition phase" });
     }
   });
 
-  // Get citizens
-  app.get('/api/citizens', async (req, res) => {
+  // ============ STARTER PACK ROUTES ============
+  
+  // Generate new starter pack
+  app.post("/api/generate-starter-pack", async (req, res) => {
     try {
       const gameState = await storage.getGameState();
       if (!gameState) {
-        return res.status(404).json({ message: 'Game state not found' });
-      }
-      
-      const citizens = await storage.getCitizens(gameState.id);
-      res.json(citizens);
-    } catch (error) {
-      res.status(500).json({ message: 'Failed to fetch citizens' });
-    }
-  });
-
-  // Get families
-  app.get('/api/families', async (req, res) => {
-    try {
-      const gameState = await storage.getGameState();
-      if (!gameState) {
-        return res.status(404).json({ message: 'Game state not found' });
-      }
-      
-      const families = await storage.getFamilies(gameState.id);
-      res.json(families);
-    } catch (error) {
-      res.status(500).json({ message: 'Failed to fetch families' });
-    }
-  });
-
-  // Get buildings
-  app.get('/api/buildings', async (req, res) => {
-    try {
-      const gameState = await storage.getGameState();
-      if (!gameState) {
-        return res.status(404).json({ message: 'Game state not found' });
-      }
-      
-      const buildings = await storage.getBuildings(gameState.id);
-      res.json(buildings);
-    } catch (error) {
-      res.status(500).json({ message: 'Failed to fetch buildings' });
-    }
-  });
-
-  // Generate starter pack
-  app.post('/api/generate-starter-pack', async (req, res) => {
-    try {
-      const gameState = await storage.getGameState();
-      if (!gameState) {
-        return res.status(404).json({ message: 'Game state not found' });
+        return res.status(404).json({ error: "Game state not found" });
       }
 
       // Clear existing emoji collection
       await storage.clearEmojiCollection(gameState.id);
 
-      // Generate new starter pack
+      // Generate new pack using engine
       const pack = generateStarterPack();
-      
-      // Store emoji collection items
+
+      // Save pack to storage
       for (const item of pack) {
         await storage.createEmojiCollectionItem({
           gameStateId: gameState.id,
@@ -161,371 +80,385 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Update game state
+      // Update pack counter
       await storage.updateGameState(gameState.id, {
         packsOpened: gameState.packsOpened + 1
       });
 
       res.json({ success: true, pack });
     } catch (error) {
-      res.status(500).json({ message: 'Failed to generate starter pack' });
+      res.status(500).json({ error: "Failed to generate starter pack" });
     }
   });
 
-  // Recruit citizen
-  app.post('/api/recruit-citizen', async (req, res) => {
+  // Get current emoji collection
+  app.get("/api/emoji-collection", async (req, res) => {
     try {
-      const data = recruitCitizenSchema.parse(req.body);
       const gameState = await storage.getGameState();
       if (!gameState) {
-        return res.status(404).json({ message: 'Game state not found' });
+        return res.status(404).json({ error: "Game state not found" });
       }
 
-      // Validate ZWJ combination
-      const zwjResult = createCitizen(data.baseEmoji, data.skinTone);
-      if (!zwjResult.valid) {
-        return res.status(400).json({ message: zwjResult.error });
-      }
-
-      // Check if components are available
       const collection = await storage.getEmojiCollection(gameState.id);
-      const baseItem = collection.find(item => item.emoji === data.baseEmoji && item.category === 'people');
-      const skinItem = collection.find(item => item.emoji === data.skinTone && item.category === 'skinTones');
+      res.json(collection);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get emoji collection" });
+    }
+  });
 
-      if (!baseItem || baseItem.count <= 0) {
-        return res.status(400).json({ message: 'Base emoji not available' });
-      }
-      if (!skinItem || skinItem.count <= 0) {
-        return res.status(400).json({ message: 'Skin tone not available' });
+  // ============ CITIZEN ROUTES ============
+  
+  // Create new citizen from base + skin tone
+  const createCitizenSchema = z.object({
+    baseEmoji: z.string(),
+    skinTone: z.string()
+  });
+
+  app.post("/api/citizens", async (req, res) => {
+    try {
+      const { baseEmoji, skinTone } = createCitizenSchema.parse(req.body);
+      const gameState = await storage.getGameState();
+      if (!gameState) {
+        return res.status(404).json({ error: "Game state not found" });
       }
 
-      // Create citizen
+      // Use ZWJ engine to create citizen
+      const result = createCitizen(baseEmoji, skinTone);
+      if (!result.valid) {
+        return res.status(400).json({ error: result.error });
+      }
+
+      // Save citizen to storage
       const citizen = await storage.createCitizen({
         gameStateId: gameState.id,
-        emoji: zwjResult.result!,
-        baseEmoji: data.baseEmoji,
-        skinTone: data.skinTone,
-        status: 'available'
+        baseEmoji,
+        skinTone,
+        emoji: result.result!,
+        status: "available"
       });
 
-      // Deduct components from collection
-      await storage.updateEmojiCollectionItem(baseItem.id, {
-        count: baseItem.count - 1
-      });
-      await storage.updateEmojiCollectionItem(skinItem.id, {
-        count: skinItem.count - 1
-      });
-
-      // Update game state
+      // Update citizen counter
       await storage.updateGameState(gameState.id, {
         totalCitizens: gameState.totalCitizens + 1
       });
 
-      res.json({ success: true, citizen });
+      res.json(citizen);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Invalid request data', errors: error.errors });
-      }
-      res.status(500).json({ message: 'Failed to recruit citizen' });
+      res.status(500).json({ error: "Failed to create citizen" });
     }
   });
 
-  // Form family
-  app.post('/api/form-family', async (req, res) => {
+  // Get all citizens
+  app.get("/api/citizens", async (req, res) => {
     try {
-      const data = formFamilySchema.parse(req.body);
       const gameState = await storage.getGameState();
       if (!gameState) {
-        return res.status(404).json({ message: 'Game state not found' });
+        return res.status(404).json({ error: "Game state not found" });
       }
 
-      // Get citizen data
+      const citizens = await storage.getCitizens(gameState.id);
+      res.json(citizens);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get citizens" });
+    }
+  });
+
+  // ============ FAMILY ROUTES ============
+  
+  // Create new family from citizens
+  const createFamilySchema = z.object({
+    memberIds: z.array(z.number()).min(1).max(4),
+    familyType: z.enum(["couple", "family", "single-parent"])
+  });
+
+  app.post("/api/families", async (req, res) => {
+    try {
+      const { memberIds, familyType } = createFamilySchema.parse(req.body);
+      const gameState = await storage.getGameState();
+      if (!gameState) {
+        return res.status(404).json({ error: "Game state not found" });
+      }
+
+      // Get all citizens to validate they exist and are available
       const allCitizens = await storage.getCitizens(gameState.id);
-      const adults = data.adults.map(id => allCitizens.find(c => c.id === id)).filter(Boolean);
-      const children = data.children ? data.children.map(id => allCitizens.find(c => c.id === id)).filter(Boolean) : [];
+      const selectedCitizens = memberIds.map(id => {
+        const citizen = allCitizens.find(c => c.id === id);
+        if (!citizen) throw new Error(`Citizen ${id} not found`);
+        if (citizen.status !== "available") throw new Error(`Citizen ${id} not available`);
+        return citizen;
+      });
 
-      if (adults.length === 0) {
-        return res.status(400).json({ message: 'At least one adult is required' });
+      // Use ZWJ engine to create family emoji
+      const adults = selectedCitizens.filter(c => !c.baseEmoji.includes('👶') && !c.baseEmoji.includes('👧') && !c.baseEmoji.includes('👦'));
+      const children = selectedCitizens.filter(c => c.baseEmoji.includes('👶') || c.baseEmoji.includes('👧') || c.baseEmoji.includes('👦'));
+      
+      let familyResult;
+      if (familyType === "couple" && adults.length === 2) {
+        familyResult = createCouple(adults[0].emoji, adults[1].emoji);
+      } else {
+        familyResult = createFamily(adults.map(a => a.emoji), children.map(c => c.emoji));
       }
-
-      // Create family ZWJ sequence
-      const adultEmojis = adults.map(a => a!.emoji);
-      const childEmojis = children.map(c => c!.emoji);
-      const familyResult = createFamily(adultEmojis, childEmojis);
 
       if (!familyResult.valid) {
-        return res.status(400).json({ message: familyResult.error });
+        return res.status(400).json({ error: familyResult.error });
       }
 
-      // Determine family type
-      let familyType: 'couple' | 'family' | 'single-parent' = 'family';
-      if (adults.length === 2 && children.length === 0) {
-        familyType = 'couple';
-      } else if (adults.length === 1 && children.length > 0) {
-        familyType = 'single-parent';
-      }
-
-      // Create family
+      // Create family in storage
       const family = await storage.createFamily({
         gameStateId: gameState.id,
         emoji: familyResult.result!,
-        members: [...data.adults, ...(data.children || [])],
+        members: memberIds,
         familyType,
         isPlaced: 0
       });
 
       // Update citizen statuses
-      for (const citizenId of [...data.adults, ...(data.children || [])]) {
-        await storage.updateCitizen(citizenId, { status: 'in-family' });
+      for (const citizen of selectedCitizens) {
+        await storage.updateCitizen(citizen.id, { status: "in-family" });
       }
 
-      // Update game state
+      // Update family counter
       await storage.updateGameState(gameState.id, {
         totalFamilies: gameState.totalFamilies + 1
       });
 
-      res.json({ success: true, family });
+      res.json(family);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Invalid request data', errors: error.errors });
-      }
-      res.status(500).json({ message: 'Failed to form family' });
+      res.status(500).json({ error: "Failed to create family" });
     }
   });
 
-  // Place family in building
-  app.post('/api/place-family', async (req, res) => {
+  // Get all families
+  app.get("/api/families", async (req, res) => {
     try {
-      const data = placeFamilySchema.parse(req.body);
       const gameState = await storage.getGameState();
       if (!gameState) {
-        return res.status(404).json({ message: 'Game state not found' });
+        return res.status(404).json({ error: "Game state not found" });
       }
 
-      // Get family
-      const family = await storage.getFamilies(gameState.id);
-      const targetFamily = family.find(f => f.id === data.familyId);
-      if (!targetFamily) {
-        return res.status(404).json({ message: 'Family not found' });
+      const families = await storage.getFamilies(gameState.id);
+      res.json(families);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get families" });
+    }
+  });
+
+  // ============ BUILDING ROUTES ============
+  
+  // Place family in building
+  const placeFamilySchema = z.object({
+    familyId: z.number(),
+    buildingType: z.string(),
+    position: z.number()
+  });
+
+  app.post("/api/buildings", async (req, res) => {
+    try {
+      const { familyId, buildingType, position } = placeFamilySchema.parse(req.body);
+      const gameState = await storage.getGameState();
+      if (!gameState) {
+        return res.status(404).json({ error: "Game state not found" });
       }
 
-      // Check if building exists, create if not
-      let building = (await storage.getBuildings(gameState.id))
-        .find(b => b.buildingType === data.buildingType && b.position === data.position);
+      // Validate family exists and is not placed
+      const families = await storage.getFamilies(gameState.id);
+      const family = families.find(f => f.id === familyId);
+      if (!family) {
+        return res.status(404).json({ error: "Family not found" });
+      }
+      if (family.isPlaced) {
+        return res.status(400).json({ error: "Family already placed" });
+      }
 
-      if (!building) {
+      // Check building capacity
+      const buildings = await storage.getBuildings(gameState.id);
+      const existingBuilding = buildings.find(b => b.buildingType === buildingType && b.position === position);
+      
+      if (existingBuilding) {
+        if (existingBuilding.currentOccupancy >= existingBuilding.capacity) {
+          return res.status(400).json({ error: "Building at capacity" });
+        }
+        // Update existing building
+        const memberIds = Array.isArray(family.members) ? family.members : [];
+        const updatedOccupants = [...(existingBuilding.occupants as number[]), ...memberIds];
+        await storage.updateBuilding(existingBuilding.id, {
+          currentOccupancy: existingBuilding.currentOccupancy + memberIds.length,
+          occupants: updatedOccupants
+        });
+      } else {
         // Create new building
-        const buildingCapacities: Record<string, number> = {
-          'fire-station': 2,
-          'hospital': 3,
-          'school': 4,
-          'restaurant': 2,
-          'police': 2,
-          'airport': 3,
-          'shop': 2,
-          'houses': 6
-        };
-
-        building = await storage.createBuilding({
+        const capacity = getBuildingCapacity(buildingType);
+        const memberIds = Array.isArray(family.members) ? family.members : [];
+        await storage.createBuilding({
           gameStateId: gameState.id,
-          buildingType: data.buildingType,
-          position: data.position,
-          capacity: buildingCapacities[data.buildingType] || 2,
-          currentOccupancy: 0,
-          occupants: []
+          buildingType,
+          position,
+          capacity,
+          currentOccupancy: memberIds.length,
+          occupants: memberIds
         });
       }
 
-      // Check capacity
-      if (building.currentOccupancy >= building.capacity) {
-        return res.status(400).json({ message: 'Building is at full capacity' });
-      }
-
-      // Update family
-      await storage.updateFamily(data.familyId, {
-        buildingType: data.buildingType,
-        isPlaced: 1
+      // Update family as placed
+      await storage.updateFamily(familyId, { 
+        isPlaced: 1,
+        buildingType 
       });
 
-      // Update building
-      const newOccupants = [...building.occupants, data.familyId];
-      await storage.updateBuilding(building.id, {
-        currentOccupancy: building.currentOccupancy + 1,
-        occupants: newOccupants
-      });
-
-      // Update citizen statuses
-      for (const citizenId of targetFamily.members) {
-        await storage.updateCitizen(citizenId as number, {
-          status: 'placed',
-          buildingType: data.buildingType
+      // Update building counter if new building
+      if (!existingBuilding) {
+        await storage.updateGameState(gameState.id, {
+          buildingsPopulated: gameState.buildingsPopulated + 1
         });
       }
-
-      // Update game state if this is the first building populated
-      const allBuildings = await storage.getBuildings(gameState.id);
-      const populatedBuildings = allBuildings.filter(b => b.currentOccupancy > 0).length;
-      await storage.updateGameState(gameState.id, {
-        buildingsPopulated: populatedBuildings
-      });
 
       res.json({ success: true });
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Invalid request data', errors: error.errors });
-      }
-      res.status(500).json({ message: 'Failed to place family' });
+      res.status(500).json({ error: "Failed to place family" });
     }
   });
 
-  // Form workplace couple
-  app.post('/api/form-workplace-couple', async (req, res) => {
+  // Get all buildings
+  app.get("/api/buildings", async (req, res) => {
     try {
-      const data = formWorkplaceCoupleSchema.parse(req.body);
       const gameState = await storage.getGameState();
       if (!gameState) {
-        return res.status(404).json({ message: 'Game state not found' });
+        return res.status(404).json({ error: "Game state not found" });
       }
 
-      // Get citizens
-      const citizens = await storage.getCitizens(gameState.id);
-      const citizen1 = citizens.find(c => c.id === data.citizen1Id);
-      const citizen2 = citizens.find(c => c.id === data.citizen2Id);
-
-      if (!citizen1 || !citizen2) {
-        return res.status(404).json({ message: 'Citizens not found' });
-      }
-
-      if (citizen1.buildingType !== data.buildingType || citizen2.buildingType !== data.buildingType) {
-        return res.status(400).json({ message: 'Citizens must be at the same building' });
-      }
-
-      // Create couple ZWJ sequence
-      const coupleResult = createCouple(citizen1.emoji, citizen2.emoji);
-      if (!coupleResult.valid) {
-        return res.status(400).json({ message: coupleResult.error });
-      }
-
-      // Create family (couple)
-      const family = await storage.createFamily({
-        gameStateId: gameState.id,
-        emoji: coupleResult.result!,
-        members: [data.citizen1Id, data.citizen2Id],
-        familyType: 'couple',
-        buildingType: data.buildingType,
-        isPlaced: 1
-      });
-
-      // Update citizen statuses
-      await storage.updateCitizen(data.citizen1Id, { status: 'in-family' });
-      await storage.updateCitizen(data.citizen2Id, { status: 'in-family' });
-
-      // Create relationship record
-      await storage.createRelationship({
-        gameStateId: gameState.id,
-        citizen1Id: data.citizen1Id,
-        citizen2Id: data.citizen2Id,
-        relationshipType: 'couple',
-        buildingType: data.buildingType,
-        emoji: coupleResult.result!
-      });
-
-      // Update game state
-      await storage.updateGameState(gameState.id, {
-        totalFamilies: gameState.totalFamilies + 1
-      });
-
-      res.json({ success: true, family });
+      const buildings = await storage.getBuildings(gameState.id);
+      res.json(buildings);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Invalid request data', errors: error.errors });
-      }
-      res.status(500).json({ message: 'Failed to form workplace couple' });
+      res.status(500).json({ error: "Failed to get buildings" });
     }
   });
 
-  // Process adoption
-  app.post('/api/process-adoption', async (req, res) => {
+  // ============ RELATIONSHIP ROUTES ============
+  
+  // Create workplace relationship
+  const createRelationshipSchema = z.object({
+    citizen1Id: z.number(),
+    citizen2Id: z.number(),
+    relationshipType: z.enum(["couple", "colleagues", "friends"]),
+    buildingType: z.string().optional()
+  });
+
+  app.post("/api/relationships", async (req, res) => {
     try {
-      const data = processAdoptionSchema.parse(req.body);
+      const { citizen1Id, citizen2Id, relationshipType, buildingType } = createRelationshipSchema.parse(req.body);
       const gameState = await storage.getGameState();
       if (!gameState) {
-        return res.status(404).json({ message: 'Game state not found' });
+        return res.status(404).json({ error: "Game state not found" });
       }
 
-      // Get family and child
-      const families = await storage.getFamilies(gameState.id);
-      const family = families.find(f => f.id === data.familyId);
-      if (!family) {
-        return res.status(404).json({ message: 'Family not found' });
-      }
-
+      // Validate citizens exist
       const citizens = await storage.getCitizens(gameState.id);
-      const child = citizens.find(c => c.id === data.childId);
-      if (!child) {
-        return res.status(404).json({ message: 'Child not found' });
+      const citizen1 = citizens.find(c => c.id === citizen1Id);
+      const citizen2 = citizens.find(c => c.id === citizen2Id);
+      
+      if (!citizen1 || !citizen2) {
+        return res.status(404).json({ error: "Citizen not found" });
       }
 
-      if (child.status !== 'available') {
-        return res.status(400).json({ message: 'Child is not available for adoption' });
+      // Create relationship emoji if it's a couple
+      let relationshipEmoji = "";
+      if (relationshipType === "couple") {
+        const result = createCouple(citizen1.emoji, citizen2.emoji);
+        if (!result.valid) {
+          return res.status(400).json({ error: result.error });
+        }
+        relationshipEmoji = result.result!;
       }
 
-      // Add adopted child to family
-      const adoptionResult = addAdoptedChild(family.emoji, child.emoji);
-      if (!adoptionResult.valid) {
-        return res.status(400).json({ message: adoptionResult.error });
+      // Save relationship
+      const relationship = await storage.createRelationship({
+        gameStateId: gameState.id,
+        citizen1Id,
+        citizen2Id,
+        relationshipType,
+        emoji: relationshipEmoji,
+        buildingType: buildingType || null
+      });
+
+      res.json(relationship);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create relationship" });
+    }
+  });
+
+  // ============ ADOPTION ROUTES ============
+  
+  // Add child to existing family
+  const adoptChildSchema = z.object({
+    familyId: z.number(),
+    childId: z.number()
+  });
+
+  app.post("/api/adopt", async (req, res) => {
+    try {
+      const { familyId, childId } = adoptChildSchema.parse(req.body);
+      const gameState = await storage.getGameState();
+      if (!gameState) {
+        return res.status(404).json({ error: "Game state not found" });
       }
 
-      // Update family
-      const newMembers = [...family.members, data.childId];
-      await storage.updateFamily(data.familyId, {
-        emoji: adoptionResult.result!,
-        members: newMembers,
-        familyType: 'family'
+      // Validate family and child exist
+      const families = await storage.getFamilies(gameState.id);
+      const citizens = await storage.getCitizens(gameState.id);
+      
+      const family = families.find(f => f.id === familyId);
+      const child = citizens.find(c => c.id === childId);
+      
+      if (!family || !child) {
+        return res.status(404).json({ error: "Family or child not found" });
+      }
+      
+      if (child.status !== "available") {
+        return res.status(400).json({ error: "Child not available for adoption" });
+      }
+
+      // Use ZWJ engine to add child to family
+      const result = addAdoptedChild(family.emoji, child.emoji);
+      if (!result.valid) {
+        return res.status(400).json({ error: result.error });
+      }
+
+      // Update family with new emoji and members
+      const currentMembers = Array.isArray(family.members) ? family.members : [];
+      await storage.updateFamily(familyId, {
+        emoji: result.result!,
+        members: [...currentMembers, childId]
       });
 
       // Update child status
-      await storage.updateCitizen(data.childId, {
-        status: 'in-family',
-        buildingType: family.buildingType
-      });
+      await storage.updateCitizen(childId, { status: "in-family" });
 
-      // Update game state
+      // Update adoption counter
       await storage.updateGameState(gameState.id, {
         adoptions: gameState.adoptions + 1
       });
 
       res.json({ success: true });
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Invalid request data', errors: error.errors });
-      }
-      res.status(500).json({ message: 'Failed to process adoption' });
+      res.status(500).json({ error: "Failed to adopt child" });
     }
   });
 
-  // Switch phase
-  app.post('/api/switch-phase', async (req, res) => {
-    try {
-      const data = switchPhaseSchema.parse(req.body);
-      const gameState = await storage.getGameState();
-      if (!gameState) {
-        return res.status(404).json({ message: 'Game state not found' });
-      }
+  const server = createServer(app);
+  return server;
+}
 
-      await storage.updateGameState(gameState.id, {
-        currentPhase: data.phase
-      });
-
-      res.json({ success: true });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Invalid request data', errors: error.errors });
-      }
-      res.status(500).json({ message: 'Failed to switch phase' });
-    }
-  });
-
-  const httpServer = createServer(app);
-  return httpServer;
+// Helper function to determine building capacity
+function getBuildingCapacity(buildingType: string): number {
+  const capacities: Record<string, number> = {
+    "🏥": 4,  // Hospital
+    "🏫": 6,  // School
+    "🏢": 8,  // Office
+    "🏠": 3,  // House
+    "🏭": 5,  // Factory
+    "🏪": 4,  // Store
+    "🏨": 6,  // Hotel
+    "🏦": 4   // Bank
+  };
+  return capacities[buildingType] || 4;
 }
