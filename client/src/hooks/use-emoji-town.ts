@@ -123,8 +123,8 @@ export function useEmojiTown() {
 
   // Switch phase mutation
   const switchPhaseMutation = useMutation({
-    mutationFn: async (phase: PhaseType) => {
-      const response = await apiRequest('POST', '/api/switch-phase', { phase });
+    mutationFn: async (data: { phase: PhaseType }) => {
+      const response = await apiRequest('POST', '/api/phase-transition', data);
       return response.json();
     },
     onSuccess: () => {

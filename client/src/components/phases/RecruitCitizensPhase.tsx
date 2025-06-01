@@ -29,12 +29,7 @@ export function RecruitCitizensPhase() {
 
   const generateCitizensMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('/api/generate-citizens', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await apiRequest('POST', '/api/generate-citizens');
       return response.json();
     },
     onSuccess: (data: GenerationResult) => {
@@ -53,15 +48,9 @@ export function RecruitCitizensPhase() {
     mutationFn: async () => {
       if (!generatedCitizens) throw new Error("No citizens to accept");
       
-      const response = await apiRequest('/api/accept-citizens', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          citizens: generatedCitizens.citizens,
-          usedComponents: generatedCitizens.usedComponents
-        }),
+      const response = await apiRequest('POST', '/api/accept-citizens', {
+        citizens: generatedCitizens.citizens,
+        usedComponents: generatedCitizens.usedComponents
       });
       return response.json();
     },
