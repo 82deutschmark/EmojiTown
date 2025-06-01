@@ -130,6 +130,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const collection = await storage.getEmojiCollection(gameState.id);
       
+      // Check if we have any base people available
+      const availablePeople = collection.filter(item => 
+        item.category === 'people' && item.count > 0
+      );
+      
+      if (availablePeople.length === 0) {
+        return res.status(400).json({ 
+          error: "No base people components available. Generate another starter pack to continue recruiting citizens." 
+        });
+      }
+      
       if (!canGenerateCitizens(collection)) {
         return res.status(400).json({ error: "Insufficient emoji components for citizen generation" });
       }
