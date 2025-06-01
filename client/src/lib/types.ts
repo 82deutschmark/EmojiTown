@@ -1,6 +1,6 @@
 export interface EmojiComponent {
   emoji: string;
-  category: 'people' | 'skinTones' | 'professions' | 'wildcards';
+  category: 'people' | 'skinTones' | 'olderAdults' | 'children' | 'professions' | 'wildcards';
   count: number;
 }
 
