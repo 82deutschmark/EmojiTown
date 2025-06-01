@@ -174,9 +174,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const collection = await storage.getEmojiCollection(gameState.id);
       
-      // Validate components are still available
-      if (!validateComponentsAvailable(collection, usedComponents)) {
-        return res.status(400).json({ error: "Components no longer available" });
+      // Check if we can debit the components (more flexible validation)
+      const componentCounts = new Map<string, number>();
+      
+      // Count required components
+      for (const component of usedComponents) {
+        const key = `${component.baseEmoji}-${component.skinTone}`;
+        componentCounts.set(key, (componentCounts.get(key) || 0) + 1);
+      }
+      
+      // Check availability
+      for (const [key, requiredCount] of componentCounts) {
+        const [baseEmoji, skinTone] = key.split('-');
+        const baseAvailable = collection.find(item => item.emoji === baseEmoji && item.category === 'people')?.count || 0;
+        const skinAvailable = collection.find(item => item.emoji === skinTone && item.category === 'skinTones')?.count || 0;
+        
+        if (baseAvailable < requiredCount || skinAvailable < requiredCount) {
+          return res.status(400).json({ error: "Insufficient components for acceptance. Please generate new citizens." });
+        }
       }
 
       // Validate all citizen emoji sequences
