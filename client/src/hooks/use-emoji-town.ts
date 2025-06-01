@@ -181,7 +181,7 @@ export function useEmojiTown() {
     placeFamily: placeFamilyMutation.mutate,
     formWorkplaceCouple: formWorkplaceCoupleMutation.mutate,
     processAdoption: processAdoptionMutation.mutate,
-    switchPhase: switchPhaseMutation.mutate,
+    switchPhase: switchPhaseMutation,
     
     // Computed values
     canRecruitCitizen,
