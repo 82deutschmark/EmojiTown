@@ -1,22 +1,15 @@
 import type { ZWJResult } from './types';
-
-// Zero Width Joiner character
-const ZWJ = '\u200D';
-
-// Known valid ZWJ sequences for people + skin tones
-const VALID_PERSON_COMBINATIONS = new Set([
-  '👨🏻', '👨🏼', '👨🏽', '👨🏾', '👨🏿',
-  '👩🏻', '👩🏼', '👩🏽', '👩🏾', '👩🏿',
-  '🧑🏻', '🧑🏼', '🧑🏽', '🧑🏾', '🧑🏿'
-]);
-
-// Known profession modifiers
-const PROFESSION_MODIFIERS = new Set([
-  '👮', '⚕️', '🚒', '🍳', '✈️', '🔧', '🏫', '💼'
-]);
-
-// Family relationship emojis
-const FAMILY_CONNECTORS = new Set(['❤️', '💕']);
+import { 
+  ZWJ, 
+  BASE_PEOPLE, 
+  SKIN_TONES, 
+  HEART_EMOJI,
+  VALID_PERSON_SKIN_COMBINATIONS,
+  VALID_PROFESSION_COMBINATIONS,
+  RGI_FAMILY_SEQUENCES,
+  validateZWJSequence as validateUnicodeSequence,
+  formatUnicodeSequence
+} from '@shared/unicode-constants';
 
 export function createCitizen(baseEmoji: string, skinTone: string): ZWJResult {
   try {
@@ -31,8 +24,8 @@ export function createCitizen(baseEmoji: string, skinTone: string): ZWJResult {
     // Create the combination
     const result = baseEmoji + skinTone;
     
-    // Validate against known combinations
-    if (!VALID_PERSON_COMBINATIONS.has(result)) {
+    // Validate against Unicode standards
+    if (!VALID_PERSON_SKIN_COMBINATIONS.has(result)) {
       return {
         valid: false,
         error: 'Invalid person + skin tone combination'
@@ -40,7 +33,7 @@ export function createCitizen(baseEmoji: string, skinTone: string): ZWJResult {
     }
 
     // Get Unicode sequence for debugging
-    const unicodeSequence = getUnicodeSequence(result);
+    const unicodeSequence = formatUnicodeSequence(result);
 
     return {
       valid: true,
@@ -64,15 +57,18 @@ export function createProfessionalCitizen(citizen: string, profession: string): 
       };
     }
 
-    if (!PROFESSION_MODIFIERS.has(profession)) {
+    // Create ZWJ sequence: citizen + ZWJ + profession
+    const result = citizen + ZWJ + profession;
+    
+    // Validate against Unicode profession combinations
+    if (!VALID_PROFESSION_COMBINATIONS.has(result)) {
       return {
         valid: false,
-        error: 'Invalid profession modifier'
+        error: 'Invalid profession combination'
       };
     }
 
-    const result = citizen + ZWJ + profession;
-    const unicodeSequence = getUnicodeSequence(result);
+    const unicodeSequence = formatUnicodeSequence(result);
 
     return {
       valid: true,

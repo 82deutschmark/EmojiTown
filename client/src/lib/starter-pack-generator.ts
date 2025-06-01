@@ -1,16 +1,12 @@
 import type { EmojiComponent, StarterPackDistribution } from './types';
 
+import { BASE_PEOPLE, SKIN_TONES, PROFESSION_OBJECTS, WILDCARD_EMOJI } from '@shared/unicode-constants';
+
 export const EMOJI_CATEGORIES = {
-  people: ['👨', '👩', '🧑'],
-  skinTones: ['🏻', '🏼', '🏽', '🏾', '🏿'],
-  professions: [
-    '👮', '⚕️', '🚒', '🍳', '✈️', '🔧', '🏫', '💼', 
-    '🎨', '📚', '🌾', '💻', '🔬', '🎭', '🎪', '🎯'
-  ],
-  wildcards: [
-    '❤️', '💕', '✨', '👶', '👧', '👦', '🧒', '👴', '👵',
-    '🤝', '💑', '💏', '👪', '🏠', '🎈', '🎉'
-  ]
+  people: [BASE_PEOPLE.MAN, BASE_PEOPLE.WOMAN, BASE_PEOPLE.PERSON],
+  skinTones: Object.values(SKIN_TONES),
+  professions: Object.values(PROFESSION_OBJECTS),
+  wildcards: Object.values(WILDCARD_EMOJI)
 } as const;
 
 export const PACK_DISTRIBUTION: StarterPackDistribution = {
