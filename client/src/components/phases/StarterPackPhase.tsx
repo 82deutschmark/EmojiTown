@@ -56,12 +56,20 @@ export function StarterPackPhase() {
                 <span className="font-semibold">15 (3 each)</span>
               </div>
               <div className="flex justify-between">
+                <span>Older Adults:</span>
+                <span className="font-semibold">4 (2 each)</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Children/Babies:</span>
+                <span className="font-semibold">4 (2 each)</span>
+              </div>
+              <div className="flex justify-between">
                 <span>Professions:</span>
                 <span className="font-semibold">25</span>
               </div>
               <div className="flex justify-between">
                 <span>Wildcards:</span>
-                <span className="font-semibold">54</span>
+                <span className="font-semibold">46</span>
               </div>
             </div>
           </div>
@@ -125,6 +133,56 @@ export function StarterPackPhase() {
               <div className="flex flex-wrap gap-2">
                 {['🏻', '🏼', '🏽', '🏾', '🏿'].map(emoji => {
                   const count = getEmojiCount(emoji, 'skinTones');
+                  return count > 0 ? (
+                    <div key={emoji} className="relative">
+                      <div className="text-2xl p-2 bg-white rounded-lg shadow-sm hover:scale-110 transition-all">
+                        {emoji}
+                      </div>
+                      <div className="absolute -top-1 -right-1 bg-blue-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
+                        {count}
+                      </div>
+                    </div>
+                  ) : null;
+                })}
+              </div>
+            </div>
+
+            {/* Older Adults */}
+            <div className="bg-gray-50 rounded-xl p-4">
+              <h3 className="font-semibold text-gray-700 mb-3 flex items-center justify-between">
+                👴 Older Adults 
+                <span className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs">
+                  {['👴', '👵'].reduce((sum, emoji) => sum + getEmojiCount(emoji, 'olderAdults'), 0)}
+                </span>
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {['👴', '👵'].map(emoji => {
+                  const count = getEmojiCount(emoji, 'olderAdults');
+                  return count > 0 ? (
+                    <div key={emoji} className="relative">
+                      <div className="text-2xl p-2 bg-white rounded-lg shadow-sm hover:scale-110 transition-all">
+                        {emoji}
+                      </div>
+                      <div className="absolute -top-1 -right-1 bg-blue-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
+                        {count}
+                      </div>
+                    </div>
+                  ) : null;
+                })}
+              </div>
+            </div>
+
+            {/* Children/Babies */}
+            <div className="bg-gray-50 rounded-xl p-4">
+              <h3 className="font-semibold text-gray-700 mb-3 flex items-center justify-between">
+                👶 Children/Babies 
+                <span className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs">
+                  {['👶', '🧒'].reduce((sum, emoji) => sum + getEmojiCount(emoji, 'children'), 0)}
+                </span>
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {['👶', '🧒'].map(emoji => {
+                  const count = getEmojiCount(emoji, 'children');
                   return count > 0 ? (
                     <div key={emoji} className="relative">
                       <div className="text-2xl p-2 bg-white rounded-lg shadow-sm hover:scale-110 transition-all">
