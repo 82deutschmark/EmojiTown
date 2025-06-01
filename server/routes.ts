@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { insertGameStateSchema, insertCitizenSchema, insertFamilySchema, insertBuildingSchema, insertRelationshipSchema } from "@shared/schema";
 import { generateStarterPack } from "./lib/starter-pack-generator";
 import { createCitizen, createCouple, createFamily, addAdoptedChild } from "./lib/zwj-engine";
+import { generateRandomCitizens, canGenerateCitizens, validateComponentsAvailable } from "./lib/citizen-generator";
 import { validateEmojiSequence, generateEmojiDescription } from "@shared/unicode-validation";
 import { 
   createCitizenAtomically, 
@@ -113,45 +114,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ============ CITIZEN ROUTES ============
+  // ============ CITIZEN RECRUITMENT ROUTES ============
   
-  // Create new citizen from base + skin tone
-  const createCitizenSchema = z.object({
-    baseEmoji: z.string(),
-    skinTone: z.string()
-  });
-
-  app.post("/api/citizens", async (req, res) => {
+  // Generate 3 random citizens from collection (for recruitment phase)
+  app.post("/api/generate-citizens", async (req, res) => {
     try {
-      const { baseEmoji, skinTone } = createCitizenSchema.parse(req.body);
       const gameState = await storage.getGameState();
       if (!gameState) {
         return res.status(404).json({ error: "Game state not found" });
       }
 
-      // Use ZWJ engine to create citizen
-      const result = createCitizen(baseEmoji, skinTone);
-      if (!result.valid) {
-        return res.status(400).json({ error: result.error });
+      if (gameState.currentPhase !== "recruit-citizens") {
+        return res.status(400).json({ error: "Not in recruitment phase" });
       }
 
-      // Save citizen to storage
-      const citizen = await storage.createCitizen({
-        gameStateId: gameState.id,
-        baseEmoji,
-        skinTone,
-        emoji: result.result!,
-        status: "available"
-      });
+      const collection = await storage.getEmojiCollection(gameState.id);
+      
+      if (!canGenerateCitizens(collection)) {
+        return res.status(400).json({ error: "Insufficient emoji components for citizen generation" });
+      }
 
-      // Update citizen counter
-      await storage.updateGameState(gameState.id, {
-        totalCitizens: gameState.totalCitizens + 1
-      });
+      const result = generateRandomCitizens(collection);
+      
+      if (result.citizens.length === 0) {
+        return res.status(400).json({ error: "Could not generate any valid citizens" });
+      }
 
-      res.json(citizen);
+      res.json({
+        citizens: result.citizens,
+        usedComponents: result.usedComponents,
+        canGenerateMore: result.citizens.length === 3
+      });
     } catch (error) {
-      res.status(500).json({ error: "Failed to create citizen" });
+      res.status(500).json({ error: "Failed to generate citizens" });
+    }
+  });
+
+  // Accept generated citizens (debit collection, create citizens)
+  const acceptCitizensSchema = z.object({
+    citizens: z.array(z.object({
+      baseEmoji: z.string(),
+      skinTone: z.string(),
+      resultEmoji: z.string(),
+      unicodeSequence: z.string()
+    })),
+    usedComponents: z.array(z.object({
+      baseEmoji: z.string(),
+      skinTone: z.string()
+    }))
+  });
+
+  app.post("/api/accept-citizens", async (req, res) => {
+    try {
+      const { citizens, usedComponents } = acceptCitizensSchema.parse(req.body);
+      const gameState = await storage.getGameState();
+      if (!gameState) {
+        return res.status(404).json({ error: "Game state not found" });
+      }
+
+      const collection = await storage.getEmojiCollection(gameState.id);
+      
+      // Validate components are still available
+      if (!validateComponentsAvailable(collection, usedComponents)) {
+        return res.status(400).json({ error: "Components no longer available" });
+      }
+
+      // Validate all citizen emoji sequences
+      for (const citizen of citizens) {
+        const validation = validateEmojiSequence(citizen.resultEmoji);
+        if (!validation.valid) {
+          return res.status(400).json({ error: `Invalid citizen sequence: ${validation.reason}` });
+        }
+      }
+
+      // Debit components from collection
+      for (const component of usedComponents) {
+        const personItem = collection.find(item => 
+          item.emoji === component.baseEmoji && item.category === 'people'
+        );
+        const skinItem = collection.find(item => 
+          item.emoji === component.skinTone && item.category === 'skinTones'
+        );
+
+        if (personItem && personItem.id) {
+          await storage.updateEmojiCollectionItem(personItem.id, {
+            count: Math.max(0, personItem.count - 1)
+          });
+        }
+
+        if (skinItem && skinItem.id) {
+          await storage.updateEmojiCollectionItem(skinItem.id, {
+            count: Math.max(0, skinItem.count - 1)
+          });
+        }
+      }
+
+      // Create citizens in storage
+      const createdCitizens = [];
+      for (const citizen of citizens) {
+        const newCitizen = await storage.createCitizen({
+          gameStateId: gameState.id,
+          baseEmoji: citizen.baseEmoji,
+          skinTone: citizen.skinTone,
+          emoji: citizen.resultEmoji,
+          status: "available"
+        });
+        createdCitizens.push(newCitizen);
+      }
+
+      // Update game state counters
+      await storage.updateGameState(gameState.id, {
+        totalCitizens: gameState.totalCitizens + citizens.length
+      });
+
+      res.json({
+        success: true,
+        citizens: createdCitizens,
+        totalCitizens: gameState.totalCitizens + citizens.length
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to accept citizens" });
     }
   });
 
