@@ -5,6 +5,13 @@ import { storage } from "./storage";
 import { insertGameStateSchema, insertCitizenSchema, insertFamilySchema, insertBuildingSchema, insertRelationshipSchema } from "@shared/schema";
 import { generateStarterPack } from "./lib/starter-pack-generator";
 import { createCitizen, createCouple, createFamily, addAdoptedChild } from "./lib/zwj-engine";
+import { validateEmojiSequence, generateEmojiDescription } from "@shared/unicode-validation";
+import { 
+  createCitizenAtomically, 
+  createFamilyAtomically, 
+  transitionPhaseAtomically, 
+  placeFamilyAtomically 
+} from "@shared/atomic-operations";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   

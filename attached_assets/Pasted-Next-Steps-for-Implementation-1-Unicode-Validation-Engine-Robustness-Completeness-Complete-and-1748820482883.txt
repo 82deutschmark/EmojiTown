@@ -1,0 +1,45 @@
+Next Steps for Implementation
+1. Unicode Validation Engine: Robustness & Completeness
+Complete and lock the RGI/Unicode lookup tables, making sure all sequence varieties (families, skin tones, professions) you want in-game are present. (Automate validation using the spec’s latest emoji-test.txt.)
+Edge case handler: Ensure invalid/mixed/mis-ordered ZWJ combinations fail gracefully, with actionable error messaging.
+Test Suite: Expand unit/integration tests to force all types of failure: invalid skin + person, bad family combos, unsupported browsers, etc.
+2. Entity/State Machine Robustness
+Atomicity Layer: Ensure every phase transition and every combinatorial action (family creation, placement, adoption, etc.) is atomic (commit/rollback).
+Statistical Validator: Implement post-phase and pre-advance checks so phase transitions only occur if statically/structurally valid—no shortcuts, no exceptions.
+3. Data Model Finalization
+Formalize schemas for every core entity (Emoji, Citizen, Family, Building, Relationship) with strict typing/enums for valid types/states.
+Relationship tracking: Prepare for extended family and professional/civic ties.
+4. UX & Accessibility Expansion
+Alt text: Ensure dynamic construction of alt text/aria-label for any ZWJ or family emoji, describing its contents/structure.
+Render fallback: For unsupported emoji, ensure a fallback UI with explanation.
+ARIA roles: Validate and patch all tab/focus/reader flows.
+5. Cross-Platform/Font Handling
+Font detection: Add robust handling for missing emoji fonts—warn user with guidance.
+Rendering test harness: Continuously validate output on all listed browser/OS combos.
+Progressive enhancement: Add non-blocking polyfills/fallbacks if modern browser not present.
+6. Advanced Validation (For Future Extension/Testing)
+Import/export: When handling game saves/imports, revalidate every emoji entity for RGI compliance before restoring.
+Unicode upgrades: Set up a procedure to auto-import/test new Unicode releases.
+7. Performance/Scalability Auditing
+Stress test with N=1000+ citizen towns.
+Profiling: Time validation/sequence rendering for possible bottlenecks.
+Optimize memoization/caching of common sequence lookups and ZWJ rendering.
+8. Documentation and Developer Onboarding
+Expand docs for every shared module, validation rule, and data pipeline.
+Error catalog: Explicit mapping between validation failure codes/messages and remedial UX.
+Contributing guide: Explicit listing of Unicode validation expectations for new emoji/features.
+Sequence of Work (Recommended Order)
+Lock Unicode/RGI data inputs, test validation engine exhaustively.
+Finalize and type all core entities/game state transitions.
+Implement and test all five phase flows with atomic commit/rollback.
+Harden error handling, user suggestions, and fallback rendering.
+Deepen accessibility and ARIA coverage.
+Stress test, profile, and optimize as needed.
+Prepare for future Unicode updates/migration.
+Your Role as LLM Coding Assistant
+Maintain vigilance on Unicode/RGI compliance at every code boundary.
+Never allow code or logic to diverge from the Unicode spec—always reference up-to-date standards.
+Insist on atomic state changes and cross-phase integrity.
+Proactively suggest test cases for ALL failure modes, not just valid paths.
+Ensure documentation, accessibility, and error feedback keep pace with systems evolution.
+Be the "spec lawyer" and "integration tester" for every emoji, ZWJ rule, and entity link.
