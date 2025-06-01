@@ -166,6 +166,11 @@ export function RecruitCitizensPhase() {
             >
               {generateCitizensMutation.isPending ? "Generating..." : "Generate Citizens"}
             </Button>
+            
+            {/* Helpful message about component availability */}
+            <div className="mt-4 text-sm text-gray-600">
+              <p>Need more components? Generate additional starter packs in the previous phase.</p>
+            </div>
           </CardContent>
         </Card>
       )}
