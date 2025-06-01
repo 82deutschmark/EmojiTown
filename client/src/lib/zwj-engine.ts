@@ -92,8 +92,18 @@ export function createCouple(adult1: string, adult2: string): ZWJResult {
       };
     }
 
-    const result = adult1 + ZWJ + '❤️' + ZWJ + adult2;
-    const unicodeSequence = getUnicodeSequence(result);
+    const result = adult1 + ZWJ + HEART_EMOJI.RED_HEART + ZWJ + adult2;
+    
+    // Validate against RGI family sequences
+    const validation = validateUnicodeSequence(result);
+    if (!validation.valid) {
+      return {
+        valid: false,
+        error: validation.reason || 'Invalid couple combination'
+      };
+    }
+
+    const unicodeSequence = formatUnicodeSequence(result);
 
     return {
       valid: true,
@@ -136,7 +146,16 @@ export function createFamily(adults: string[], children: string[] = []): ZWJResu
       result += ZWJ + child;
     });
 
-    const unicodeSequence = getUnicodeSequence(result);
+    // Validate against RGI family sequences
+    const validation = validateUnicodeSequence(result);
+    if (!validation.valid) {
+      return {
+        valid: false,
+        error: validation.reason || 'Invalid family combination'
+      };
+    }
+
+    const unicodeSequence = formatUnicodeSequence(result);
 
     return {
       valid: true,
